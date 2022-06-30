@@ -1,9 +1,20 @@
 const express = require('express');
 const app = express();
+const morgan = require('morgan');
+// const requestLogger = require('./middleware/requestLogger');
+const unknownEndpoint = require('./middleware/unknownEndpoint');
 let data = require('./data');
 
 app.use(express.json());
 
+morgan.token('body', function (req, res) {
+	return [JSON.stringify(req.body)];
+});
+// app.use(requestLogger);
+
+app.use(
+	morgan(':method :url :status :res[content-length] - :response-time ms :body')
+);
 // GET
 app.get('/api/persons', (req, res) => {
 	res.json(data);
@@ -68,6 +79,9 @@ app.delete('/api/persons/:id', (req, res) => {
 		res.status(404).end();
 	}
 });
+
+// middleware if a request was made to an unknown route
+app.use(unknownEndpoint);
 
 const PORT = 8000;
 app.listen(PORT, () => {
