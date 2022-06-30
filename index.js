@@ -38,7 +38,9 @@ app.post('/api/persons', (req, res) => {
 		return;
 	}
 
-	if (data.find((person) => person.name === body.name)) {
+	if (
+		data.find((person) => person.name.toLowerCase() === body.name.toLowerCase())
+	) {
 		res.status(400).json({ error: 'name already exists' });
 		return;
 	}
