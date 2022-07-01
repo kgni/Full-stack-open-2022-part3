@@ -86,7 +86,7 @@ app.delete('/api/persons/:id', (req, res) => {
 // middleware if a request was made to an unknown route
 app.use(unknownEndpoint);
 
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
 	console.log(`server running on port ${PORT}`);
 });
