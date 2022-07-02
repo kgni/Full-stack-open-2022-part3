@@ -107,5 +107,35 @@ app.delete('/api/persons/:id', (req, res) => {
 	});
 });
 
+// UPDATE
+
+app.put('/api/persons/:id', (request, response, next) => {
+	const body = request.body;
+
+	const person = {
+		name: body.name,
+		number: body.number,
+	};
+
+	Person.findByIdAndUpdate(request.params.id, person, { new: true })
+		.then((updatedPerson) => {
+			response.json(updatedPerson);
+		})
+		.catch((error) => next(error));
+});
+
 // middleware if a request was made to an unknown route
 app.use(unknownEndpoint);
+
+const errorHandler = (error, request, response, next) => {
+	console.error(error.message);
+
+	if (error.name === 'CastError') {
+		return response.status(400).send({ error: 'malformatted id' });
+	}
+
+	next(error);
+};
+
+// handler of requests with result to errors
+app.use(errorHandler);
