@@ -1,10 +1,27 @@
 const express = require('express');
 const app = express();
+const mongoose = require('mongoose');
 const morgan = require('morgan');
 const cors = require('cors');
+require('dotenv').config();
 // const requestLogger = require('./middleware/requestLogger');
 const unknownEndpoint = require('./middleware/unknownEndpoint');
-let data = require('./data');
+
+// models
+
+const Person = require('./models/person');
+const person = require('./models/person');
+
+// HARDCODED DATA:
+// let data = require('./data');
+
+mongoose.connect(process.env.MONGO_URI).then((result) => {
+	console.log(`Connected to DB`);
+	const PORT = process.env.PORT;
+	app.listen(PORT, () => {
+		console.log(`server running on port ${PORT}`);
+	});
+});
 
 app.use(express.json());
 app.use(cors());
@@ -20,29 +37,42 @@ app.use(
 );
 // GET
 app.get('/api/persons', (req, res) => {
-	res.json(data);
+	Person.find({}).then((persons) => {
+		res.json(persons);
+	});
 });
-app.get('/info', (req, res) => {
+app.get('/info', async (req, res) => {
+	const persons = await Person.find({});
 	res.send(
-		`<p>Phonebook has info for ${data.length} people</p> <p> ${new Date()}</p>`
+		`<p>Phonebook has info for ${
+			persons.length
+		} people</p> <p> ${new Date()}</p>`
 	);
 });
 
 app.get('/api/persons/:id', (req, res) => {
-	const id = Number(req.params.id);
-	const person = data.find((person) => person.id === id);
-	if (person) {
-		res.json(person);
-	} else {
-		res.status(404).end();
+	const { id } = req.params;
+
+	// check if the provided ID, is following the rules for how an ID should be in mongo
+	if (!mongoose.Types.ObjectId.isValid(id)) {
+		res.status(400).json({ error: 'not a valid id' });
+		return;
 	}
+
+	Person.findById(id)
+		.then((result) => {
+			// if we had a correct ID (following the rules by the ObjectId.isValid method, we will send back the result)
+			if (result) {
+				res.json(result);
+				// if mongoose couldn't find a document with the provided ID, it will return null which is falsy, and therefor we can send back an error message.
+			} else {
+				res.json({ error: 'no person found' });
+			}
+		})
+		.catch((err) => res.status(404));
 });
 
 // POST
-
-const generateId = () => {
-	return Math.floor(Math.random() * 999999999999999999999);
-};
 
 app.post('/api/persons', (req, res) => {
 	const body = req.body;
@@ -52,41 +82,30 @@ app.post('/api/persons', (req, res) => {
 		return;
 	}
 
-	if (
-		data.find((person) => person.name.toLowerCase() === body.name.toLowerCase())
-	) {
-		res.status(400).json({ error: 'name already exists' });
-		return;
-	}
-
-	const person = {
-		name: body.name,
-		number: body.number,
-		id: generateId(),
-	};
-
-	data = data.concat(person);
-
-	res.status(200).json(person);
+	Person.create({ name: body.name, number: body.number })
+		.then((result) => res.status(200).json(result))
+		.catch((error) => res.json(error));
 });
 
 // DELETE
 
 app.delete('/api/persons/:id', (req, res) => {
-	const id = Number(req.params.id);
-	const person = data.find((person) => person.id === id);
-	if (person) {
-		data = data.filter((person) => person.id !== id);
-		res.status(204).end();
-	} else {
-		res.status(404).end();
+	const { id } = req.params;
+
+	// check if the provided ID, is following the rules for how an ID should be in mongo
+	if (!mongoose.Types.ObjectId.isValid(id)) {
+		res.status(400).json({ error: 'not a valid id' });
+		return;
 	}
+
+	Person.findByIdAndDelete(id).then((result) => {
+		if (result) {
+			res.status(200).json(result);
+		} else {
+			res.json({ error: 'no person found' });
+		}
+	});
 });
 
 // middleware if a request was made to an unknown route
 app.use(unknownEndpoint);
-
-const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-	console.log(`server running on port ${PORT}`);
-});
