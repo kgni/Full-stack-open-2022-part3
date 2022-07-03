@@ -19,6 +19,6 @@ const data = [
 		name: 'Mary Poppendieck',
 		number: '39-23-6423122',
 	},
-];
+]
 
-module.exports = data;
+module.exports = data
