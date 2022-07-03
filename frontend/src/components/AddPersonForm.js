@@ -9,6 +9,7 @@ const AddPersonForm = ({
 	newNumber,
 	setNewNumber,
 	setSuccessMessage,
+	setErrorMessage,
 }) => {
 	const addPersonHandler = (event) => {
 		event.preventDefault();
@@ -22,13 +23,9 @@ const AddPersonForm = ({
 
 		// parse newNumber from string to a number:
 
-		const number = Number(newNumber);
+		const number = newNumber;
 
 		// check if number is a number
-		if (!number) {
-			alert(`Number needs to be a number`);
-			return;
-		}
 
 		// create array of only the names and numbers in our phonebook lower casing all names so we cannot add the same name with different casing)
 		const names = persons.map((person) => person.name.toLowerCase());
@@ -75,22 +72,33 @@ const AddPersonForm = ({
 			number: number,
 		};
 
-		personService.create(personObject).then((response) =>
-			setPersons((prevPersons) => {
-				return [...prevPersons, response.data];
+		personService
+			.create(personObject)
+			.then((response) => {
+				setPersons((prevPersons) => {
+					return [...prevPersons, response.data];
+				});
+
+				setSuccessMessage(`Added ${newName}`);
+
+				setTimeout(() => {
+					setSuccessMessage(null);
+				}, 5000);
+
+				console.log(`${newName} - ${number} was added to the phonebook`);
+
+				setNewName('');
+				setNewNumber('');
 			})
-		);
+			.catch((error) => {
+				console.log(error.response.data);
 
-		setSuccessMessage(`Added ${newName}`);
+				setErrorMessage(error.response.data.error);
 
-		setTimeout(() => {
-			setSuccessMessage(null);
-		}, 5000);
-
-		console.log(`${newName} - ${number} was added to the phonebook`);
-
-		setNewName('');
-		setNewNumber('');
+				setTimeout(() => {
+					setErrorMessage(null);
+				}, 5000);
+			});
 	};
 
 	return (
@@ -110,7 +118,7 @@ const AddPersonForm = ({
 					labelText="number"
 					input={{
 						id: 'number',
-						type: 'number',
+						type: 'text',
 						value: newNumber,
 						onChange: (event) => setNewNumber(event.target.value),
 					}}

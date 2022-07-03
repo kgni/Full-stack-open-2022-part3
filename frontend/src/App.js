@@ -59,6 +59,7 @@ const App = () => {
 
 			<AddPersonForm
 				setSuccessMessage={setSuccessMessage}
+				setErrorMessage={setErrorMessage}
 				persons={persons}
 				setPersons={setPersons}
 				newName={newName}
