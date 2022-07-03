@@ -21,11 +21,7 @@ const AddPersonForm = ({
 			return;
 		}
 
-		// parse newNumber from string to a number:
-
 		const number = newNumber;
-
-		// check if number is a number
 
 		// create array of only the names and numbers in our phonebook lower casing all names so we cannot add the same name with different casing)
 		const names = persons.map((person) => person.name.toLowerCase());
@@ -40,11 +36,10 @@ const AddPersonForm = ({
 			) {
 				let updatedPerson = persons.find((person) => person.name === newName);
 				const oldNumber = updatedPerson.number;
-				updatedPerson.number = number;
 
 				personService
-					.update(updatedPerson.id, updatedPerson)
-					.then((result) => {
+					.update(updatedPerson.id, { number })
+					.then(() => {
 						setPersons((prevPersons) =>
 							prevPersons.map((person) =>
 								person.id !== updatedPerson.id ? person : updatedPerson
@@ -65,6 +60,8 @@ const AddPersonForm = ({
 					.catch((error) => {
 						console.log(error.response.data);
 
+						console.log(persons);
+
 						setErrorMessage(error.response.data.error);
 
 						setTimeout(() => {
@@ -73,45 +70,45 @@ const AddPersonForm = ({
 						return;
 					});
 			}
-		}
+		} else {
+			if (numbers.includes(number)) {
+				alert(`${number} is already added to the phonebook`);
+				return;
+			}
 
-		if (numbers.includes(number)) {
-			alert(`${number} is already added to the phonebook`);
-			return;
-		}
+			const personObject = {
+				name: newName,
+				number: number,
+			};
 
-		const personObject = {
-			name: newName,
-			number: number,
-		};
+			personService
+				.create(personObject)
+				.then((response) => {
+					setPersons((prevPersons) => {
+						return [...prevPersons, response.data];
+					});
 
-		personService
-			.create(personObject)
-			.then((response) => {
-				setPersons((prevPersons) => {
-					return [...prevPersons, response.data];
+					setSuccessMessage(`Added ${newName}`);
+
+					setTimeout(() => {
+						setSuccessMessage(null);
+					}, 5000);
+
+					console.log(`${newName} - ${number} was added to the phonebook`);
+
+					setNewName('');
+					setNewNumber('');
+				})
+				.catch((error) => {
+					console.log(error.response.data);
+
+					setErrorMessage(error.response.data.error);
+
+					setTimeout(() => {
+						setErrorMessage(null);
+					}, 5000);
 				});
-
-				setSuccessMessage(`Added ${newName}`);
-
-				setTimeout(() => {
-					setSuccessMessage(null);
-				}, 5000);
-
-				console.log(`${newName} - ${number} was added to the phonebook`);
-
-				setNewName('');
-				setNewNumber('');
-			})
-			.catch((error) => {
-				console.log(error.response.data);
-
-				setErrorMessage(error.response.data.error);
-
-				setTimeout(() => {
-					setErrorMessage(null);
-				}, 5000);
-			});
+		}
 	};
 
 	return (
