@@ -38,7 +38,7 @@ const AddPersonForm = ({
 				const oldNumber = updatedPerson.number;
 
 				personService
-					.update(updatedPerson.id, { number })
+					.update(updatedPerson.id, { number: number })
 					.then(() => {
 						setPersons((prevPersons) =>
 							prevPersons.map((person) =>
