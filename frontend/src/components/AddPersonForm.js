@@ -42,23 +42,36 @@ const AddPersonForm = ({
 				const oldNumber = updatedPerson.number;
 				updatedPerson.number = number;
 
-				personService.update(updatedPerson.id, updatedPerson);
-				setPersons((prevPersons) =>
-					prevPersons.map((person) =>
-						person.id !== updatedPerson.id ? person : updatedPerson
-					)
-				);
-				setSuccessMessage(
-					`${newName}'s number was changed from ${oldNumber} to ${number}`
-				);
+				personService
+					.update(updatedPerson.id, updatedPerson)
+					.then((result) => {
+						setPersons((prevPersons) =>
+							prevPersons.map((person) =>
+								person.id !== updatedPerson.id ? person : updatedPerson
+							)
+						);
+						setSuccessMessage(
+							`${newName}'s number was changed from ${oldNumber} to ${number}`
+						);
 
-				setTimeout(() => {
-					setSuccessMessage(null);
-				}, 5000);
+						setTimeout(() => {
+							setSuccessMessage(null);
+						}, 5000);
 
-				setNewName('');
-				setNewNumber('');
-				return;
+						setNewName('');
+						setNewNumber('');
+						return;
+					})
+					.catch((error) => {
+						console.log(error.response.data);
+
+						setErrorMessage(error.response.data.error);
+
+						setTimeout(() => {
+							setErrorMessage(null);
+						}, 5000);
+						return;
+					});
 			}
 		}
 
